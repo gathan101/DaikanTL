@@ -7,7 +7,7 @@ export function loadImage(src) {
   })
 }
 
-// panel.bbox: [ymin, xmin, ymax, xmax] dalam skala 0-1000 (normalisasi Gemini)
+// panel.bbox: [ymin, xmin, ymax, xmax] dalam skala 0-1000
 export async function compose(imageSrc, panels, font, { watermark = false } = {}) {
   const img = await loadImage(imageSrc)
   const canvas = document.createElement('canvas')
@@ -52,7 +52,7 @@ export async function compose(imageSrc, panels, font, { watermark = false } = {}
   if (watermark) {
     ctx.fillStyle = 'rgba(0,0,0,0.35)'
     ctx.font = `bold ${Math.floor(img.width / 18)}px sans-serif`
-    ctx.fillText('WeBAI Free', img.width - ctx.measureText('WeBAI Free').width - 24, img.height - 24)
+    ctx.fillText('DaikanTL Free', img.width - ctx.measureText('DaikanTL Free').width - 24, img.height - 24)
   }
   return canvas.toDataURL('image/png')
 }

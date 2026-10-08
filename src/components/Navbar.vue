@@ -22,7 +22,7 @@ function handleLogout() {
 <template>
   <nav class="bg-[#1b1f27] border-b border-slate-800 sticky top-0 z-10">
     <div class="max-w-5xl mx-auto flex items-center justify-between px-4 py-3 text-slate-200">
-      <router-link to="/" class="font-bold text-xl text-[#76C0EC]">WeBAI</router-link>
+      <router-link to="/" class="font-bold text-xl text-[#76C0EC]">DaikanTL</router-link>
       <button class="md:hidden" @click="open = !open">☰</button>
       <div :class="['md:flex items-center gap-4', open ? 'flex flex-col absolute top-full left-0 right-0 bg-white p-4 shadow md:static md:flex-row md:shadow-none' : 'hidden']">
         <router-link to="/">Home</router-link>

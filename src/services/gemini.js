@@ -33,7 +33,7 @@ export async function translateImage(base64Image, mimeType, targetLanguage = 'In
   }
   const res = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
   const data = await res.json()
-  if (!res.ok) throw new Error(data.error?.message || 'Gagal memanggil Gemini')
+  if (!res.ok) throw new Error(data.error?.message || 'Gagal memproses terjemahan')
   const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '[]'
   return JSON.parse(text)
 }
