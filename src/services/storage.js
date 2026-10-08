@@ -4,7 +4,7 @@ const KEY = 'last_manga'
 const TTL = 4 * 60 * 60 * 1000 // 4 jam
 
 export async function saveResult(panels) {
-  await localforage.setItem(KEY, { panels, savedAt: Date.now() })
+  await localforage.setItem(KEY, JSON.parse(JSON.stringify({ panels, savedAt: Date.now() })))
 }
 
 export async function loadResult() {
