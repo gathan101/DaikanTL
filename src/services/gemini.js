@@ -1,5 +1,5 @@
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY
-const MODEL = 'gemini-2.0-flash'
+const MODEL = 'gemini-3.8-flash'
 
 function buildPrompt(targetLanguage, mode) {
   const gaya = mode === 'Formal' ? 'bahasa baku yang sopan' : mode === 'Slang' ? 'bahasa gaul/slang anak muda' : 'Bahasa Indonesia Santai / Natural Webtoon Scanlation'
