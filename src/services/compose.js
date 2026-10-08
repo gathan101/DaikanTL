@@ -18,11 +18,18 @@ export async function compose(imageSrc, panels, font, { watermark = false } = {}
 
   for (const p of panels) {
     if (!p.bbox) continue
-    const [ymin, xmin, ymax, xmax] = p.bbox
-    const x = (xmin / 1000) * img.width
-    const y = (ymin / 1000) * img.height
-    const w = ((xmax - xmin) / 1000) * img.width
-    const h = ((ymax - ymin) / 1000) * img.height
+    let [xmin, ymin, xmax, ymax] = p.bbox
+    // dukung dua kemungkinan format: piksel absolut atau 0-1000
+    if (Math.max(xmin, ymin, xmax, ymax) <= 1000) {
+      xmin = (xmin / 1000) * img.width
+      ymin = (ymin / 1000) * img.height
+      xmax = (xmax / 1000) * img.width
+      ymax = (ymax / 1000) * img.height
+    }
+    const x = xmin
+    const y = ymin
+    const w = xmax - xmin
+    const h = ymax - ymin
 
     ctx.fillStyle = 'rgba(255,255,255,0.92)'
     ctx.beginPath()
@@ -30,9 +37,16 @@ export async function compose(imageSrc, panels, font, { watermark = false } = {}
     ctx.fill()
 
     ctx.fillStyle = '#111'
-    let fontSize = Math.max(14, Math.floor(h / 4))
+    let fontSize = Math.max(12, Math.floor(h / 3))
+    let lines = []
+    while (fontSize > 10) {
+      ctx.font = `${fontSize}px '${font}', sans-serif`
+      lines = wrapLines(ctx, p.translated, w - 16)
+      if (lines.length * fontSize * 1.2 <= h - 8) break
+      fontSize -= 2
+    }
     ctx.font = `${fontSize}px '${font}', sans-serif`
-    wrapText(ctx, p.translated, x + 8, y + fontSize + 6, w - 16, fontSize * 1.2)
+    lines.forEach((line, i) => ctx.fillText(line, x + 8, y + fontSize + 6 + i * fontSize * 1.2))
   }
 
   if (watermark) {
@@ -43,16 +57,17 @@ export async function compose(imageSrc, panels, font, { watermark = false } = {}
   return canvas.toDataURL('image/png')
 }
 
-function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+function wrapLines(ctx, text, maxWidth) {
   const words = text.split(/\s+/)
+  const lines = []
   let line = ''
   for (const w of words) {
     const test = line ? line + ' ' + w : w
     if (ctx.measureText(test).width > maxWidth && line) {
-      ctx.fillText(line, x, y)
+      lines.push(line)
       line = w
-      y += lineHeight
     } else line = test
   }
-  ctx.fillText(line, x, y)
+  if (line) lines.push(line)
+  return lines
 }
