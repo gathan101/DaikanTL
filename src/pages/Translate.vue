@@ -17,6 +17,7 @@ const isPremium = computed(() => user.value?.premium === true)
 const fontOptions = ['Bangers', 'Comic Neue', 'Komika', 'Wild Words', 'Noto Sans']
 const selectedFont = ref('Noto Sans')
 const selectedMode = ref('Santai')
+const autoDetectBoxes = ref(true)
 
 const images = ref([]) // [{ file, preview, composedSrc, panels: [{bubble,original,translated,bbox,checked}], status }]
 const loading = ref(false)
@@ -57,7 +58,12 @@ async function proses() {
       im.status = 'loading'
       try {
         const b64 = await toBase64(im.file)
-        const regions = await detectTextRegions(b64, im.file.type)
+        const regions = autoDetectBoxes.value
+          ? await detectTextRegions(b64, im.file.type)
+          : [{ bubble: 1, bbox: [0, 0, 1000, 1000], confidence: 1 }]
+        if (autoDetectBoxes.value && !regions.length) {
+          throw new Error('Tidak ada area teks yang terdeteksi di halaman ini')
+        }
         const ocrResults = []
         for (const region of regions) {
           const crop = await cropImageRegion(im.preview, region.bbox)
@@ -79,7 +85,9 @@ async function proses() {
         if (isPremium.value) {
           await saveTranslation({ mode: selectedMode.value, font: selectedFont.value, result: im.panels })
         }
-        im.composedSrc = await compose(im.preview, im.panels, selectedFont.value, { watermark: !isPremium.value })
+        im.composedSrc = autoDetectBoxes.value
+          ? await compose(im.preview, im.panels, selectedFont.value, { watermark: !isPremium.value })
+          : im.preview
         im.status = 'done'
       } catch (e) {
         im.status = 'error'
@@ -105,7 +113,9 @@ async function downloadZip() {
     if (!chosen.length) continue
     count++
     if (im.preview) {
-      const dataUrl = await compose(im.preview, chosen, selectedFont.value, { watermark: !isPremium.value })
+      const dataUrl = autoDetectBoxes.value
+        ? await compose(im.preview, chosen, selectedFont.value, { watermark: !isPremium.value })
+        : im.preview
       zip.file(`manga_terjemahan_${count}.png`, dataUrl.split(',')[1], { base64: true })
     } else {
       const text = chosen.map((p) => `[Bubble ${p.bubble}] ${p.translated}`).join('\n\n')
@@ -139,6 +149,17 @@ function selectAll() {
     <p v-if="!isPremium" class="text-xs text-slate-500">Sisa kuota hari ini: {{ DAILY_LIMIT - getUsage().count }} panel (Free)</p>
 
     <UploadBox @files="onFiles" />
+
+    <label class="flex items-center gap-2 text-sm cursor-pointer w-fit">
+      <input v-model="autoDetectBoxes" type="checkbox" class="accent-[#76C0EC]" />
+      <span>Deteksi box otomatis</span>
+      <span class="text-xs text-slate-500">
+        ({{ autoDetectBoxes ? 'aktif' : 'nonaktif' }})
+      </span>
+    </label>
+    <p class="text-xs text-slate-500 -mt-4">
+      {{ autoDetectBoxes ? 'Area bubble akan dicari otomatis sebelum OCR.' : 'OCR akan membaca satu area penuh tanpa typesetting otomatis.' }}
+    </p>
 
     <div v-if="images.length" class="flex flex-col gap-4">
       <div class="flex flex-wrap gap-4 items-center">
