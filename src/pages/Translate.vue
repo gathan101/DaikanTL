@@ -104,7 +104,7 @@ async function reset() {
     <UploadBox @file="onFile" />
 
     <div v-if="imagePreview" class="flex flex-col gap-4">
-      <img :src="composedSrc || imagePreview" class="max-h-[32rem] rounded border border-slate-700" />
+      <img :src="composedSrc || imagePreview" class="max-w-full max-h-[32rem] h-auto object-contain rounded border border-slate-700" />
       <div class="flex flex-wrap gap-4 items-center">
         <label class="text-sm">Font:
           <select v-model="selectedFont" class="bg-[#2a303c] rounded px-2 py-1 ml-1">
