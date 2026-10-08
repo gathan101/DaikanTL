@@ -1,51 +1,50 @@
-const USERS_KEY = 'webai_users'
-const CURRENT_KEY = 'webai_current_user'
+import { supabase } from './supabase'
 
-function getUsers() {
-  return JSON.parse(localStorage.getItem(USERS_KEY) || '[]')
+const SESSION_KEY = 'webai_current_user'
+
+function saveSession(user) {
+  localStorage.setItem(SESSION_KEY, JSON.stringify(user))
 }
 
-function saveUsers(users) {
-  localStorage.setItem(USERS_KEY, JSON.stringify(users))
-}
-
-export function register({ name, email, password }) {
-  const users = getUsers()
-  if (users.some((u) => u.email === email)) {
-    return { ok: false, message: 'Email sudah terdaftar' }
+export async function register({ name, email, password }) {
+  const { data, error } = await supabase.auth.signUp({ email, password })
+  if (error) return { ok: false, message: error.message }
+  if (data.user) {
+    await supabase.from('profiles').insert({ id: data.user.id, name, premium: false })
   }
-  users.push({ name, email, password, premium: false })
-  saveUsers(users)
   return { ok: true }
 }
 
-export function login({ email, password }) {
-  const users = getUsers()
-  const user = users.find((u) => u.email === email && u.password === password)
-  if (!user) return { ok: false, message: 'Email atau password salah' }
-  localStorage.setItem(CURRENT_KEY, JSON.stringify({ name: user.name, email: user.email, premium: user.premium }))
+export async function login({ email, password }) {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+  if (error) return { ok: false, message: 'Email atau password salah' }
+  const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.user.id).single()
+  saveSession({ id: data.user.id, name: profile?.name || email, email, premium: profile?.premium || false })
   return { ok: true }
 }
 
 export function logout() {
-  localStorage.removeItem(CURRENT_KEY)
+  supabase.auth.signOut()
+  localStorage.removeItem(SESSION_KEY)
 }
 
 export function currentUser() {
-  const raw = localStorage.getItem(CURRENT_KEY)
+  const raw = localStorage.getItem(SESSION_KEY)
   return raw ? JSON.parse(raw) : null
 }
 
-export function upgradeToPremium() {
+export async function upgradeToPremium() {
   const user = currentUser()
   if (!user) return { ok: false, message: 'Harus login dulu' }
-  const users = getUsers()
-  const target = users.find((u) => u.email === user.email)
-  if (target) {
-    target.premium = true
-    saveUsers(users)
-  }
+  const { error } = await supabase.from('profiles').update({ premium: true }).eq('id', user.id)
+  if (error) return { ok: false, message: error.message }
   user.premium = true
-  localStorage.setItem(CURRENT_KEY, JSON.stringify(user))
+  saveSession(user)
   return { ok: true }
+}
+
+export async function saveTranslation({ mode, font, result }) {
+  const user = currentUser()
+  if (!user) return
+  await supabase.from('translations').insert({ user_id: user.id, mode, font, result })
 }

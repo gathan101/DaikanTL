@@ -8,13 +8,13 @@ const email = ref('')
 const password = ref('')
 const error = ref('')
 
-function submit() {
+async function submit() {
   error.value = ''
   if (!email.value || !password.value) {
     error.value = 'Email dan password wajib diisi'
     return
   }
-  const res = login({ email: email.value, password: password.value })
+  const res = await login({ email: email.value, password: password.value })
   if (res.ok) router.push('/')
   else error.value = res.message
 }

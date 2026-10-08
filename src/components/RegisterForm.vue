@@ -9,7 +9,7 @@ const email = ref('')
 const password = ref('')
 const error = ref('')
 
-function submit() {
+async function submit() {
   error.value = ''
   if (!name.value || !email.value || !password.value) {
     error.value = 'Semua kolom wajib diisi'
@@ -19,7 +19,7 @@ function submit() {
     error.value = 'Password minimal 6 karakter'
     return
   }
-  const res = register({ name: name.value, email: email.value, password: password.value })
+  const res = await register({ name: name.value, email: email.value, password: password.value })
   if (res.ok) router.push('/login')
   else error.value = res.message
 }

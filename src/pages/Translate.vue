@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import UploadBox from '../components/UploadBox.vue'
 import ResultModal from '../components/ResultModal.vue'
-import { currentUser } from '../services/auth'
+import { currentUser, saveTranslation } from '../services/auth'
 import { translateImage } from '../services/gemini'
 import { saveResult, loadResult, clearResult } from '../services/storage'
 import { canTranslate, addUsage, DAILY_LIMIT, getUsage } from '../services/usage'
@@ -60,6 +60,7 @@ async function proses() {
     panels.value = result.map((r) => ({ ...r, checked: true }))
     addUsage(panels.value.length)
     await saveResult(panels.value)
+    await saveTranslation({ mode: selectedMode.value, font: selectedFont.value, result: panels.value })
     composedSrc.value = await compose(imagePreview.value, panels.value, selectedFont.value, { watermark: !isPremium.value })
   } catch (e) {
     error.value = e.message

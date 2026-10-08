@@ -15,8 +15,8 @@ function subscribe() {
   showModal.value = true
 }
 
-function confirm() {
-  const res = upgradeToPremium()
+async function confirm() {
+  const res = await upgradeToPremium()
   if (res.ok) {
     user.value = currentUser()
     message.value = 'Selamat! Akun kamu sudah Premium ★'
