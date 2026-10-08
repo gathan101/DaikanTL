@@ -15,9 +15,8 @@ function buildPrompt(targetLanguage, mode) {
 
 Order bubbles by manga reading order (right-to-left, top-to-bottom).
 Return ONLY a JSON array, no markdown, no explanation. For each bubble include the bounding box as [ymin, xmin, ymax, xmax] normalized 0-1000:
-[{"bubble": 1, "original": "teks asli", "translated": "terjemahan", "bbox": [xmin, ymin, xmax, ymax]}]`
-
-Use "bbox" as [xmin, ymin, xmax, ymax] in PIXEL coordinates of the original image.
+[{"bubble": 1, "original": "teks asli", "translated": "terjemahan", "bbox": [xmin, ymin, xmax, ymax]}]
+Use "bbox" as [xmin, ymin, xmax, ymax] in PIXEL coordinates of the original image.`
 }
 
 export async function translateImage(base64Image, mimeType, targetLanguage = 'Indonesian', mode = 'Santai') {
