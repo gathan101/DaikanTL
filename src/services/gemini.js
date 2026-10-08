@@ -14,8 +14,8 @@ function buildPrompt(targetLanguage, mode) {
    - BAD/SLOP: 'SAYA BERJANJI AKAN DATANG KEMBALI KEPADAMU BESOK' -> GOOD/NATURAL: 'BESOK AKU JANJI BAKAL BALIK LAGI, KOK!'
 
 Order bubbles by manga reading order (right-to-left, top-to-bottom).
-Return ONLY a JSON array, no markdown, no explanation:
-[{"bubble": 1, "original": "teks asli", "translated": "terjemahan"}]`
+Return ONLY a JSON array, no markdown, no explanation. For each bubble include the bounding box as [ymin, xmin, ymax, xmax] normalized 0-1000:
+[{"bubble": 1, "original": "teks asli", "translated": "terjemahan", "bbox": [0, 0, 100, 100]}]`
 }
 
 export async function translateImage(base64Image, mimeType, targetLanguage = 'Indonesian', mode = 'Santai') {

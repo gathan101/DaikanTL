@@ -8,6 +8,7 @@ import { saveResult, loadResult, clearResult } from '../services/storage'
 import { canTranslate, addUsage, DAILY_LIMIT, getUsage } from '../services/usage'
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
+import { compose } from '../services/compose'
 
 const user = ref(currentUser())
 const isPremium = computed(() => user.value?.premium === true)
@@ -17,6 +18,7 @@ const selectedFont = ref('Noto Sans')
 const selectedMode = ref('Santai')
 
 const imagePreview = ref(null)
+const composedSrc = ref(null)
 const rawFile = ref(null)
 const panels = ref([]) // [{ bubble, original, translated, checked }]
 const loading = ref(false)
@@ -39,9 +41,10 @@ function toBase64(file) {
   })
 }
 
-async function onFile(file) {
+function onFile(file) {
   rawFile.value = file
   imagePreview.value = URL.createObjectURL(file)
+  composedSrc.value = null
   error.value = ''
   panels.value = []
 }
@@ -57,6 +60,7 @@ async function proses() {
     panels.value = result.map((r) => ({ ...r, checked: true }))
     addUsage(panels.value.length)
     await saveResult(panels.value)
+    composedSrc.value = await compose(imagePreview.value, panels.value, selectedFont.value, { watermark: !isPremium.value })
   } catch (e) {
     error.value = e.message
   } finally {
@@ -73,11 +77,9 @@ async function downloadZip() {
   const chosen = panels.value.filter((p) => p.checked)
   if (!chosen.length) return
   const zip = new JSZip()
-  if (rawFile.value) {
-    zip.file('manga_original.' + rawFile.value.name.split('.').pop(), rawFile.value)
-  }
-  const text = chosen.map((p) => `[Bubble ${p.bubble}] ${p.translated}`).join('\n\n')
-  zip.file('terjemahan.txt', text)
+  const dataUrl = await compose(imagePreview.value, chosen, selectedFont.value, { watermark: !isPremium.value })
+  const base64 = dataUrl.split(',')[1]
+  zip.file('manga_terjemahan.png', base64, { base64: true })
   const blob = await zip.generateAsync({ type: 'blob' })
   saveAs(blob, 'terjemahan.zip')
 }
@@ -85,6 +87,7 @@ async function downloadZip() {
 async function reset() {
   panels.value = []
   imagePreview.value = null
+  composedSrc.value = null
   rawFile.value = null
   error.value = ''
   await clearResult()
@@ -100,7 +103,7 @@ async function reset() {
     <UploadBox @file="onFile" />
 
     <div v-if="imagePreview" class="flex flex-col gap-4">
-      <img :src="imagePreview" class="max-h-96 rounded border border-slate-700" />
+      <img :src="composedSrc || imagePreview" class="max-h-[32rem] rounded border border-slate-700" />
       <div class="flex flex-wrap gap-4 items-center">
         <label class="text-sm">Font:
           <select v-model="selectedFont" class="bg-[#2a303c] rounded px-2 py-1 ml-1">
