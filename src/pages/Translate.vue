@@ -3,10 +3,11 @@ import { ref, onMounted, computed } from 'vue'
 import UploadBox from '../components/UploadBox.vue'
 import ResultModal from '../components/ResultModal.vue'
 import { currentUser, saveTranslation } from '../services/auth'
-import { translateImage } from '../services/gemini'
+import { detectTextRegions, translateTexts } from '../services/gemini'
+import { recognizeMangaText } from '../services/mangaOcr'
 import { saveResult, loadResult, clearResult } from '../services/storage'
 import { canTranslate, addUsage, DAILY_LIMIT, getUsage } from '../services/usage'
-import { compose } from '../services/compose'
+import { compose, cropImageRegion } from '../services/compose'
 import JSZip from 'jszip'
 import { saveAs } from 'file-saver'
 
@@ -56,8 +57,24 @@ async function proses() {
       im.status = 'loading'
       try {
         const b64 = await toBase64(im.file)
-        const result = await translateImage(b64, im.file.type, 'Indonesian', selectedMode.value)
-        im.panels = result.map((r) => ({ ...r, checked: true }))
+        const regions = await detectTextRegions(b64, im.file.type)
+        const ocrResults = []
+        for (const region of regions) {
+          const crop = await cropImageRegion(im.preview, region.bbox)
+          const original = await recognizeMangaText(crop, `${im.file.name}-bubble-${region.bubble}.png`)
+          if (original) ocrResults.push({ bubble: region.bubble, text: original })
+        }
+        const translations = await translateTexts(ocrResults, 'Indonesian', selectedMode.value)
+        const textByBubble = new Map(ocrResults.map((item) => [item.bubble, item.text]))
+        const translationByBubble = new Map(translations.map((item) => [item.bubble, item.translated]))
+        im.panels = regions
+          .map((region) => ({
+            ...region,
+            original: textByBubble.get(region.bubble) || '',
+            translated: translationByBubble.get(region.bubble) || '',
+            checked: Boolean(textByBubble.get(region.bubble)),
+          }))
+          .filter((panel) => panel.original || panel.translated)
         addUsage(im.panels.length)
         if (isPremium.value) {
           await saveTranslation({ mode: selectedMode.value, font: selectedFont.value, result: im.panels })

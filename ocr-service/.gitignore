@@ -1,0 +1,4 @@
+# OCR service dependencies
+.venv/
+__pycache__/
+*.pyc
