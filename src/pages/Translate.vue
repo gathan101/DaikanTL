@@ -146,7 +146,8 @@ function selectAll() {
 
       <div v-for="(im, idx) in images" :key="idx" class="bg-[#1b1f27] border border-slate-800 rounded-lg p-4 flex flex-col gap-3">
         <p class="text-xs text-slate-500">{{ im.file?.name || im.name || `Gambar ${idx + 1}` }} — {{ im.status }}</p>
-        <img :src="im.composedSrc || im.preview" class="max-w-full max-h-96 h-auto object-contain rounded border border-slate-700" />
+        <img v-if="im.composedSrc || im.preview" :src="im.composedSrc || im.preview" class="max-w-full max-h-96 h-auto object-contain rounded border border-slate-700" />
+        <p v-else class="text-slate-500 text-sm">(gambar tidak tersimpan, hanya teks hasil)</p>
         <div v-if="im.panels.length" class="flex flex-col gap-2">
           <div class="flex gap-3 items-center">
             <h3 class="font-bold">Hasil ({{ im.panels.length }} bubble)</h3>
