@@ -28,8 +28,9 @@ function handleLogout() {
         <router-link to="/">Home</router-link>
         <router-link to="/translate">Translate</router-link>
         <router-link to="/premium">Premium</router-link>
+        <router-link to="/profile">Profile</router-link>
         <template v-if="user">
-          <span class="text-sm text-slate-500">Halo, {{ user.name }} <span v-if="user.premium" class="text-amber-500 font-semibold">★ Premium</span></span>
+          <span class="text-sm text-slate-500">{{ user.name }} <span v-if="user.premium" class="text-amber-500 font-semibold">★ Premium</span></span>
           <button @click="handleLogout" class="text-red-500">Logout</button>
         </template>
         <template v-else>
